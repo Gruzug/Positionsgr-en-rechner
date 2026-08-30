@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Positionsrechner – Lotsize für Forex, Gold &amp; Indizes berechnen</title>
+<meta name="description" content="Positionsgröße berechnen aus Kontostand, Risiko in Prozent, Einstieg und Stop-Loss. Für Forex, Gold (XAU/USD) und Indizes. Kostenlos, ohne Anmeldung.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAFAF8;
+    --surface:#FFFFFF;
+    --sunken:#F4F4F2;
+    --ink:#131514;
+    --text:#5C6260;
+    --label:#8B918F;
+    --border:#E5E5E1;
+    --dark:#121413;
+    --dark-2:#1C1F1D;
+    --dark-line:#333835;
+    --green:#1E4634;
+    --green-soft:#5FD3A0;
+    --amber:#9A6B1F;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{max-width:660px;margin:0 auto}
+
+  /* ---------- Kopfzeile ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:rgba(250,250,248,.92);
+    backdrop-filter:saturate(180%) blur(12px);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-in{
+    max-width:660px;margin:0 auto;
+    padding:18px 22px 14px;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+  }
+  .topbar h1{font-size:27px;font-weight:700;letter-spacing:-.025em;line-height:1.1}
+  .eyebrow{
+    font-size:11.5px;font-weight:500;color:var(--label);
+    letter-spacing:.14em;text-transform:uppercase;padding-top:5px;
+  }
+  .pulse{
+    width:9px;height:9px;border-radius:50%;background:var(--green-soft);
+    margin-top:9px;flex:none;
+    box-shadow:0 0 0 0 rgba(95,211,160,.6);
+    animation:pulse 2.6s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(95,211,160,.55)}
+    70%{box-shadow:0 0 0 9px rgba(95,211,160,0)}
+    100%{box-shadow:0 0 0 0 rgba(95,211,160,0)}
+  }
+
+  section{padding:26px 22px}
+
+  /* ---------- Ergebniskarte ---------- */
+  .board{
+    background:var(--dark);
+    color:#fff;
+    border-radius:22px;
+    padding:24px 24px 26px;
+  }
+  .board-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .board-top .cap{
+    font-family:"JetBrains Mono",monospace;
+    font-size:11.5px;letter-spacing:.19em;text-transform:uppercase;color:#9AA19E;
+  }
+  .live{
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;letter-spacing:.17em;text-transform:uppercase;
+    color:var(--green-soft);
+    background:rgba(95,211,160,.09);
+    border:1px solid rgba(95,211,160,.32);
+    border-radius:999px;padding:4px 13px;
+  }
+
+  .figure{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:30px 0 34px}
+  #lots{
+    font-family:"JetBrains Mono",monospace;font-weight:700;
+    font-size:clamp(46px,13vw,66px);line-height:.95;letter-spacing:-.035em;
+  }
+  .figure .u{font-size:26px;font-weight:500;color:#9AA19E;letter-spacing:-.02em}
+  #units{
+    font-family:"JetBrains Mono",monospace;
+    font-size:12.5px;color:#7C837F;width:100%;padding-top:9px;
+  }
+
+  .grid{
+    border-top:1px solid var(--dark-line);
+    padding-top:22px;
+    display:grid;grid-template-columns:1fr 1fr;gap:22px 20px;
+  }
+  .cell .k{
+    font-size:11px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;
+    color:#8A918D;line-height:1.35;
+  }
+  .cell .v{
+    font-family:"JetBrains Mono",monospace;font-weight:500;
+    font-size:16px;padding-top:7px;color:#fff;
+  }
+
+  /* ---------- Hinweisbanner ---------- */
+  .notice{
+    display:flex;gap:11px;align-items:flex-start;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:15px;
+    padding:14px 16px;
+    margin-top:16px;
+    font-size:14.5px;color:var(--text);
+  }
+  .notice svg{flex:none;margin-top:2px}
+  .notice.warn{border-color:#E3D3B4;background:#FCF8EF;color:var(--amber)}
+  .notice.warn svg path{fill:var(--amber)}
+  .hidden{display:none !important}
+
+  .lede{font-size:16.5px;color:var(--text);padding:22px 0 4px}
+
+  /* ---------- Formular ---------- */
+  .form{background:var(--sunken);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  fieldset{border:0;padding-bottom:24px}
+  fieldset:last-of-type{padding-bottom:4px}
+  legend,.lbl{
+    font-size:11.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--label);padding-bottom:9px;display:block;
+  }
+  .lbl .opt{font-weight:400;letter-spacing:.06em}
+
+  .pair{display:grid;grid-template-columns:1fr auto;gap:11px}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+
+  input,select{
+    width:100%;
+    font-family:"JetBrains Mono",monospace;
+    font-size:19px;font-weight:400;color:var(--ink);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:15px 17px;
+    transition:border-color .13s,box-shadow .13s;
+  }
+  input::placeholder{color:#B9BDBB}
+  select{
+    font-family:Inter,sans-serif;font-size:17px;
+    appearance:none;padding-right:44px;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'><path d='M1 1l6 6 6-6' stroke='%23131514' stroke-width='1.7' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat;background-position:right 17px center;
+  }
+  input:hover,select:hover{border-color:#CFD3D0}
+  input:focus,select:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(30,70,52,.11)}
+  input:focus-visible,select:focus-visible{outline:2px solid var(--green);outline-offset:1px}
+
+  .pct{position:relative}
+  .pct::after{
+    content:"%";position:absolute;right:19px;top:50%;transform:translateY(-50%);
+    font-family:"JetBrains Mono",monospace;font-size:17px;color:var(--label);pointer-events:none;
+  }
+  .pct input{padding-right:44px}
+
+  .presets{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding-bottom:11px}
+  .presets button{
+    font-family:Inter,sans-serif;font-size:15px;font-weight:500;
+    background:var(--surface);border:1px solid var(--border);color:var(--ink);
+    border-radius:13px;padding:13px 4px;cursor:pointer;transition:.13s;
+  }
+  .presets button:hover{border-color:#C4C8C5}
+  .presets button[aria-pressed="true"]{
+    background:var(--green);border-color:var(--green);color:#fff;
+    box-shadow:0 0 0 3px rgba(30,70,52,.14);
+  }
+  .hint{font-size:13.5px;color:var(--label);padding-top:8px;line-height:1.4}
+
+  /* ---------- Artikel ---------- */
+  .article h2{font-size:26px;font-weight:700;letter-spacing:-.022em;padding-bottom:4px}
+  .article h3{font-size:19px;font-weight:700;letter-spacing:-.015em;padding-top:30px}
+  .article p{font-size:16.5px;color:var(--text);padding-top:11px}
+  .code{
+    font-family:"JetBrains Mono",monospace;font-size:14.5px;line-height:1.9;
+    background:var(--sunken);border:1px solid var(--border);border-radius:15px;
+    padding:18px 19px;margin-top:16px;overflow-x:auto;color:#3A403D;
+  }
+  .code b{color:var(--green);font-weight:700}
+
+  footer{background:var(--sunken);border-top:1px solid var(--border);padding:26px 22px 44px}
+  footer .cap{font-size:11.5px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--label)}
+  footer p{font-size:14px;color:var(--label);padding-top:11px;line-height:1.6}
+
+  @media (max-width:430px){
+    .grid{gap:19px 14px}
+    .presets{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div>
+      <h1>Positionsrechner</h1>
+      <p class="eyebrow">Risikomanagement · Forex, Gold, Indizes</p>
+    </div>
+    <span class="pulse" aria-hidden="true"></span>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section>
+    <div class="board" aria-live="polite">
+      <div class="board-top">
+        <span class="cap">Positionsgröße</span>
+        <span class="live">Live</span>
+      </div>
+
+      <div class="figure">
+        <span id="lots">—</span>
+        <span class="u">Lots</span>
+        <span id="units">&nbsp;</span>
+      </div>
+
+      <div class="grid">
+        <div class="cell"><div class="k">Risiko in Geld</div><div class="v" id="rAmt">—</div></div>
+        <div class="cell"><div class="k">Stop-Abstand</div><div class="v" id="dist">—</div></div>
+        <div class="cell"><div class="k">Wert je Pip</div><div class="v" id="pipVal">—</div></div>
+        <div class="cell"><div class="k">Positionswert</div><div class="v" id="notional">—</div></div>
+        <div class="cell"><div class="k">Chance-Risiko-Verhältnis</div><div class="v" id="rr">—</div></div>
+        <div class="cell"><div class="k">Gewinn bei Take-Profit</div><div class="v" id="win">—</div></div>
+      </div>
+    </div>
+
+    <p class="notice" id="notice">
+      <svg width="17" height="17" viewBox="0 0 16 16" aria-hidden="true"><path fill="#8B918F" d="M8 1.2 15.2 14H.8L8 1.2Zm0 3.1L3.4 12.7h9.2L8 4.3Zm-.7 2.4h1.4v3.1H7.3V6.7Zm0 3.8h1.4v1.3H7.3v-1.3Z"/></svg>
+      <span id="noticeText">Einstieg und Stop-Loss eintragen, um zu rechnen.</span>
+    </p>
+
+    <p class="lede">Wie viele Lots darfst du handeln, ohne mehr als dein festgelegtes Risiko zu verlieren? Werte eintragen – gerechnet wird sofort.</p>
+  </section>
+
+  <section class="form">
+    <form id="calc" autocomplete="off">
+
+      <fieldset>
+        <legend>Kontostand &amp; Währung</legend>
+        <div class="pair">
+          <input type="text" inputmode="decimal" id="balance" value="10000" aria-label="Kontostand">
+          <select id="acct" aria-label="Kontowährung">
+            <option>EUR</option><option>USD</option><option>CHF</option>
+            <option>GBP</option><option>JPY</option><option>CAD</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Risiko pro Trade – Anteil vom Konto</legend>
+        <div class="presets" id="presets">
+          <button type="button" data-v="0.25">0,25 %</button>
+          <button type="button" data-v="0.5">0,5 %</button>
+          <button type="button" data-v="1" aria-pressed="true">1 %</button>
+          <button type="button" data-v="2">2 %</button>
+        </div>
+        <div class="pct"><input type="text" inputmode="decimal" id="risk" value="1" aria-label="Risiko in Prozent"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Instrument</legend>
+        <select id="sym" aria-label="Instrument"></select>
+      </fieldset>
+
+      <fieldset id="customBox" class="hidden">
+        <legend>Eigene Kontraktdaten</legend>
+        <div class="duo">
+          <div>
+            <span class="lbl">Kontraktgröße</span>
+            <input type="text" inputmode="decimal" id="cSize" value="100000">
+          </div>
+          <div>
+            <span class="lbl">Notierung</span>
+            <select id="cQuote">
+              <option>USD</option><option>EUR</option><option>JPY</option>
+              <option>CHF</option><option>GBP</option><option>CAD</option>
+            </select>
+          </div>
+        </div>
+        <p class="hint">Einheiten pro 1,00 Lot – Forex-Standardlot 100 000, Gold 100 Unzen. Notierung ist die zweite Währung im Paar.</p>
+      </fieldset>
+
+      <fieldset>
+        <span class="lbl">Einstieg</span>
+        <input type="text" inputmode="decimal" id="entry" placeholder="1.0850" aria-label="Einstieg">
+      </fieldset>
+
+      <fieldset>
+        <span class="lbl">Stop-Loss</span>
+        <input type="text" inputmode="decimal" id="stop" placeholder="1.0800" aria-label="Stop-Loss">
+      </fieldset>
+
+      <fieldset>
+        <span class="lbl">Take-Profit <span class="opt">(optional)</span></span>
+        <input type="text" inputmode="decimal" id="target" placeholder="1.0950" aria-label="Take-Profit">
+      </fieldset>
+
+      <fieldset id="fxBox">
+        <span class="lbl">Kurs <span id="fxPair">USD/EUR</span></span>
+        <input type="text" inputmode="decimal" id="fx" value="0.92" aria-label="Wechselkurs">
+        <p class="hint" id="fxHint"></p>
+      </fieldset>
+    </form>
+  </section>
+
+  <section class="article">
+    <h2>So wird gerechnet</h2>
+    <p>Die Positionsgröße folgt aus drei Werten: dem Geldbetrag, den du bereit bist zu verlieren, dem Abstand zwischen Einstieg und Stop-Loss, und dem Wert, den eine Preisbewegung bei diesem Instrument hat.</p>
+    <div class="code">Risiko = Kontostand × Risikoprozent<br>Verlust je Lot = |Einstieg − Stop| × Kontraktgröße × Wechselkurs<br><b>Lots = Risiko ÷ Verlust je Lot</b></div>
+    <p>Der Wechselkurs entfällt, wenn die Notierungswährung deiner Kontowährung entspricht. Handelst du EUR/USD auf einem Euro-Konto, entsteht der Verlust in Dollar und muss zurück in Euro gerechnet werden – dafür ist das Feld gedacht.</p>
+
+    <h3>Warum ein fester Prozentsatz</h3>
+    <p>Ein gleichbleibender Prozentsatz sorgt dafür, dass der Verlust bei einem weiten Stop nicht größer ist als bei einem engen. Die Positionsgröße gleicht den Unterschied aus, nicht dein Konto. Verlierst du, schrumpft der Einsatz automatisch mit – eine Verlustserie frisst dich damit langsamer auf als bei fester Lotgröße.</p>
+
+    <h3>Was der Rechner nicht kennt</h3>
+    <p>Spread, Swap, Kommission und Slippage sind nicht enthalten. Der tatsächliche Verlust liegt dadurch etwas über dem angezeigten Wert. Bei engen Stops kann der Spread spürbar ins Gewicht fallen – rechne ihn im Zweifel zum Stop-Abstand dazu.</p>
+
+    <h3>Wechselkurs eintragen</h3>
+    <p>Der Kurs wird nicht automatisch geladen. Trage den aktuellen Kurs aus deiner Handelsplattform ein. Für grobe Planung reicht ein Näherungswert, für die exakte Order nimm den echten Kurs.</p>
+  </section>
+
+  <footer>
+    <p class="cap">Risikohinweis</p>
+    <p>Keine Anlageberatung, keine Empfehlung. Die Berechnung ersetzt nicht die Positionsanzeige deines Brokers – prüfe die Ordergröße vor jedem Trade in der Handelsplattform. Alle Eingaben bleiben im Browser und werden nirgendwo gespeichert oder übertragen.</p>
+  </footer>
+</main>
+
+<script>
+"use strict";
+
+var MARKETS = [
+  {id:"EURUSD", name:"EUR/USD",  size:100000, pip:0.0001, quote:"USD"},
+  {id:"GBPUSD", name:"GBP/USD",  size:100000, pip:0.0001, quote:"USD"},
+  {id:"AUDUSD", name:"AUD/USD",  size:100000, pip:0.0001, quote:"USD"},
+  {id:"NZDUSD", name:"NZD/USD",  size:100000, pip:0.0001, quote:"USD"},
+  {id:"USDCHF", name:"USD/CHF",  size:100000, pip:0.0001, quote:"CHF"},
+  {id:"USDCAD", name:"USD/CAD",  size:100000, pip:0.0001, quote:"CAD"},
+  {id:"EURGBP", name:"EUR/GBP",  size:100000, pip:0.0001, quote:"GBP"},
+  {id:"USDJPY", name:"USD/JPY",  size:100000, pip:0.01,   quote:"JPY"},
+  {id:"EURJPY", name:"EUR/JPY",  size:100000, pip:0.01,   quote:"JPY"},
+  {id:"GBPJPY", name:"GBP/JPY",  size:100000, pip:0.01,   quote:"JPY"},
+  {id:"XAUUSD", name:"Gold XAU/USD",   size:100,  pip:0.1,  quote:"USD"},
+  {id:"XAGUSD", name:"Silber XAG/USD", size:5000, pip:0.01, quote:"USD"},
+  {id:"GC",     name:"Gold-Future GC (100 oz)", size:100, pip:0.1, quote:"USD"},
+  {id:"MGC",    name:"Gold-Future MGC (10 oz)", size:10,  pip:0.1, quote:"USD"},
+  {id:"CUSTOM", name:"Eigenes Instrument …", size:100000, pip:0, quote:"USD"}
+];
+
+function $(id){ return document.getElementById(id); }
+
+var symEl = $("sym");
+MARKETS.forEach(function(m){
+  var o = document.createElement("option");
+  o.value = m.id; o.textContent = m.name;
+  symEl.appendChild(o);
+});
+symEl.value = "XAUUSD";
+
+function num(el){
+  var raw = String(el.value).trim().replace(/\s/g,"");
+  if(!raw) return NaN;
+  if(raw.indexOf(",") > -1 && raw.indexOf(".") > -1){
+    raw = raw.lastIndexOf(",") > raw.lastIndexOf(".")
+        ? raw.replace(/\./g,"").replace(",",".")
+        : raw.replace(/,/g,"");
+  } else {
+    raw = raw.replace(",",".");
+  }
+  var n = parseFloat(raw);
+  return isFinite(n) ? n : NaN;
+}
+function fmt(n,dp){ return n.toLocaleString("de-DE",{minimumFractionDigits:dp,maximumFractionDigits:dp}); }
+function money(n,c){ return n.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}) + " " + c; }
+
+function current(){
+  var m = MARKETS.filter(function(x){ return x.id === symEl.value; })[0];
+  if(m.id !== "CUSTOM") return m;
+  var s = num($("cSize"));
+  return {id:"CUSTOM", size: (isFinite(s) && s > 0) ? s : 1, pip:0, quote: $("cQuote").value};
+}
+function show(el,on){ el.classList.toggle("hidden", !on); }
+
+function say(msg, warn){
+  var n = $("notice");
+  if(!msg){ n.classList.add("hidden"); return; }
+  $("noticeText").textContent = msg;
+  n.classList.remove("hidden");
+  n.classList.toggle("warn", !!warn);
+}
+
+function render(){
+  var m = current(),
+      acct = $("acct").value,
+      needsFx = m.quote !== acct;
+
+  show($("customBox"), m.id === "CUSTOM");
+  show($("fxBox"), needsFx);
+  $("fxPair").textContent = m.quote + "/" + acct;
+  $("fxHint").textContent = "Wie viel " + acct + " ist 1 " + m.quote + " wert?";
+
+  var bal   = num($("balance")),
+      riskP = num($("risk")),
+      entry = num($("entry")),
+      stop  = num($("stop")),
+      tgt   = num($("target")),
+      fx    = needsFx ? num($("fx")) : 1;
+
+  function reset(msg, warn){
+    $("lots").textContent = "—";
+    $("units").innerHTML = "&nbsp;";
+    ["rAmt","dist","pipVal","notional","rr","win"].forEach(function(k){ $(k).textContent = "—"; });
+    say(msg, warn);
+  }
+
+  if(!isFinite(bal) || bal <= 0)          return reset("Kontostand eintragen, um zu rechnen.");
+  if(!isFinite(riskP) || riskP <= 0)      return reset("Risiko in Prozent eintragen.");
+  if(!isFinite(entry) || !isFinite(stop)) return reset("Einstieg und Stop-Loss eintragen, um zu rechnen.");
+
+  var dist = Math.abs(entry - stop);
+  if(dist === 0) return reset("Einstieg und Stop-Loss sind identisch – der Abstand muss größer als null sein.", true);
+  if(needsFx && (!isFinite(fx) || fx <= 0)) return reset("Kurs " + m.quote + "/" + acct + " eintragen.");
+
+  var riskAmt    = bal * riskP / 100,
+      lossPerLot = dist * m.size * fx,
+      lots       = riskAmt / lossPerLot,
+      units      = lots * m.size,
+      notional   = units * entry * fx;
+
+  $("lots").textContent = fmt(lots, lots < 1 ? 3 : 2);
+  $("units").textContent = fmt(Math.round(units), 0) + " Einheiten";
+  $("rAmt").textContent = money(riskAmt, acct);
+  $("notional").textContent = money(notional, acct);
+
+  if(m.pip > 0){
+    $("dist").textContent = fmt(dist / m.pip, 1) + " Pips";
+    $("pipVal").textContent = money(m.pip * m.size * fx * lots, acct);
+  } else {
+    $("dist").textContent = fmt(dist, 4) + " Punkte";
+    $("pipVal").textContent = money(m.size * fx * lots, acct);
+  }
+
+  var msg = null, warn = false;
+
+  if(isFinite(tgt) && tgt !== entry){
+    var rr = Math.abs(tgt - entry) / dist,
+        wrongSide = (stop < entry && tgt < entry) || (stop > entry && tgt > entry);
+    $("rr").textContent  = wrongSide ? "—" : "1 : " + fmt(rr, 2);
+    $("win").textContent = wrongSide ? "—" : money(riskAmt * rr, acct);
+    if(wrongSide){
+      msg = "Take-Profit liegt auf derselben Seite wie der Stop-Loss. Bei einem Long muss das Ziel über dem Einstieg liegen, bei einem Short darunter.";
+      warn = true;
+    }
+  } else {
+    $("rr").textContent = "—";
+    $("win").textContent = "—";
+  }
+
+  if(!msg){
+    if(lots < 0.01){
+      msg = "Diese Größe liegt unter 0,01 Lot – die kleinste Order bei den meisten Brokern. Setze den Stop enger oder wähle ein Instrument mit kleinerer Kontraktgröße.";
+      warn = true;
+    } else if(riskP > 2){
+      msg = "Über 2 % pro Trade: Zehn Verluste in Folge kosten dich bei " + fmt(riskP,2) + " % rund " + fmt((1 - Math.pow(1 - riskP/100, 10)) * 100, 1) + " % des Kontos.";
+      warn = true;
+    } else if(notional > bal * 100){
+      msg = "Der Positionswert entspricht mehr als dem 100-fachen deines Kontos. Prüfe, ob Hebel und Margin dafür ausreichen.";
+      warn = true;
+    }
+  }
+  say(msg, warn);
+}
+
+$("presets").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-v]");
+  if(!b) return;
+  $("risk").value = b.dataset.v.replace(".", ",");
+  syncPresets();
+  render();
+});
+function syncPresets(){
+  var v = num($("risk"));
+  Array.prototype.forEach.call($("presets").querySelectorAll("button"), function(b){
+    b.setAttribute("aria-pressed", parseFloat(b.dataset.v) === v ? "true" : "false");
+  });
+}
+
+$("calc").addEventListener("input", function(){ syncPresets(); render(); });
+$("calc").addEventListener("change", render);
+
+render();
+</script>
+</body>
+</html>
